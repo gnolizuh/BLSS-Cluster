@@ -28,8 +28,8 @@ func main()  {
 		},
 		cli.StringFlag{
 			Name:  "method",
-			Value: "post",
-			Usage: "methods: get/post",
+			Value: "POST",
+			Usage: "methods: GET/POST",
 		},
 	}
 	myApp.Action = func(c *cli.Context) error {
