@@ -4,15 +4,22 @@ import (
 	"net/http"
 	"fmt"
 	"../utils"
+	"../scenes"
 	"io/ioutil"
 	"strings"
 )
+
+type Scenes interface {
+	New() interface{}
+	Run()
+}
 
 type FuncType func(*http.Request) map[string][]string
 
 type Manager struct {
 	config *utils.Config
 	funcMap map[string]FuncType
+	scenesMap map[string]interface{}
 }
 
 func NewManager(config *utils.Config) (*Manager) {
@@ -33,11 +40,20 @@ func NewManager(config *utils.Config) (*Manager) {
 		query := strings.Split(string(body[:]), "&")
 		for _, pairs := range query {
 			pair := strings.Split(pairs, "=")
-			kv[pair[0]] = []string{pair[1]}
+			if len(pair[0]) > 0 {
+				if kv[pair[0]] != nil {
+					kv[pair[0]] = append(kv[pair[0]], pair[1])
+				} else {
+					kv[pair[0]] = []string{pair[1]}
+				}
+			}
 		}
 
 		return kv
 	}
+
+	m.scenesMap = make(map[string]interface{})
+	m.scenesMap["publish"] = scenes.PublishScenes{}
 
 	return m
 }
@@ -50,6 +66,11 @@ func (manager *Manager) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if form := manager.funcMap[r.Method](r); form != nil {
-		fmt.Println(form)
+		if call := form["call"]; call != nil {
+			fmt.Println(call)
+			if scenes := manager.scenesMap[call[0]]; scenes != nil {
+				(((scenes.(Scenes)).New()).(Scenes)).Run()
+			}
+		}
 	}
 }

@@ -24,12 +24,12 @@ func main()  {
 		cli.StringFlag{
 			Name: "listen,l",
 			Value: ":19000",
-			Usage: " listen address",
+			Usage: "listen address",
 		},
 		cli.StringFlag{
-			Name:  "method",
+			Name:  "method,m",
 			Value: "POST",
-			Usage: "methods: GET/POST",
+			Usage: "HTTP request method: GET/POST",
 		},
 	}
 	myApp.Action = func(c *cli.Context) error {
