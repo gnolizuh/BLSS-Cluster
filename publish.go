@@ -1,4 +1,4 @@
-package scenes
+package main
 
 import "fmt"
 
@@ -7,9 +7,11 @@ type PublishScenes struct {
 }
 
 func (ps PublishScenes) New() interface{} {
-	return &PublishScenes{}
+	p := new(PublishScenes)
+	return p
 }
 
-func (ps PublishScenes) Run() {
+func (ps PublishScenes) Run(stream *Stream) {
 	fmt.Println("PublishScenes")
+	AddStream(stream)
 }

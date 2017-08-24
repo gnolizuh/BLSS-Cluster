@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"time"
 	"log"
-	"./utils"
-	"./session"
 )
 
 var (
@@ -33,13 +31,13 @@ func main()  {
 		},
 	}
 	myApp.Action = func(c *cli.Context) error {
-		config := utils.Config{}
+		config := Config{}
 		config.Listen = c.String("listen")
 		config.Method = c.String("method")
 
 		fmt.Printf("listen: %s method: %s\n", config.Listen, config.Method)
 
-		m := session.NewManager(&config)
+		m := NewManager(&config)
 
 		s := &http.Server{
 			Addr:           config.Listen,

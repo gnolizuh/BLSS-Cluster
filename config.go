@@ -1,9 +1,4 @@
-package utils
-
-var (
-	HTTP_METHOD_GET = 0
-	HTTP_METHOD_POST = 1
-)
+package main
 
 type Config struct {
 	Listen string `json:"listen"`
