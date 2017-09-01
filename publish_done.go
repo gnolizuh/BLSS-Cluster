@@ -1,6 +1,6 @@
 package main
 
-import "fmt"
+import "net/http"
 
 type PublishDoneScenes struct {
 
@@ -11,7 +11,10 @@ func (ps PublishDoneScenes) New() interface{} {
 	return p
 }
 
-func (ps PublishDoneScenes) Run(stream *Stream) {
-	fmt.Println("PublishDoneScenes")
+func (ps PublishDoneScenes) Name() string {
+	return "PublishDoneScenes"
+}
+
+func (ps PublishDoneScenes) Run(stream *Stream, w http.ResponseWriter, r *http.Request) {
 	DelStream(stream)
 }

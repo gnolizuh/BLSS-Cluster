@@ -3,6 +3,7 @@ package main
 import (
 	"strconv"
 	"sync"
+	"net/http"
 )
 
 var StreamMutex = &sync.Mutex{}
@@ -17,9 +18,7 @@ type Stream struct {
 	streams   ServiceMapType
 }
 
-func NewStream(data ScenesDataType) *Stream {
-	r := data.request
-	f := data.form
+func NewStream(r *http.Request, f map[string][]string) *Stream {
 
 	s := new(Stream)
 	s.localAddr = r.Header.Get("Local-Addr")

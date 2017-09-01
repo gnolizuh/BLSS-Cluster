@@ -35,7 +35,9 @@ func main()  {
 		config.Listen = c.String("listen")
 		config.Method = c.String("method")
 
-		fmt.Printf("listen: %s method: %s\n", config.Listen, config.Method)
+		fmt.Printf("%s %d#0: %s/%s\n",
+			time.Now().Format("2006/01/02 15:04:05"), os.Getpid(),
+			myApp.Name, myApp.Version)
 
 		m := NewManager(&config)
 
