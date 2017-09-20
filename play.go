@@ -1,37 +1,47 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"github.com/go-redis/redis"
+	"fmt"
 )
 
 type PlayScenes struct {
-
+	BaseScenes
 }
 
-func (ps PlayScenes) New() interface{} {
+func (scenes *PlayScenes) New(m *Manager) Scenes {
 	p := new(PlayScenes)
+	p.status = http.StatusOK
+	p.manager = m
+	p.headers = make(map[string]string)
 	return p
 }
 
-func (ps PlayScenes) Name() string {
+func (scenes *PlayScenes) Name() string {
 	return "PlayScenes"
 }
 
-func (ps PlayScenes) Run(stream *Stream, w http.ResponseWriter, r *http.Request) {
-	if dst_stream := GetStream(stream); dst_stream != nil {
-		if !(stream.localAddr == dst_stream.localAddr &&
-			stream.localPort == dst_stream.localPort) {
+func (scenes *PlayScenes) Run(s *Stream) {
+	// TO DO
+	// defer distlock.Unlock()
+	// distlock.Lock()
 
-			dst_url := fmt.Sprintf("rtmp://%s:%d/%s/%s/%s",
-				dst_stream.localAddr, dst_stream.localPort, stream.host,
-				stream.app, stream.name)
+	manager := scenes.manager
+	redis_client := manager.redisClient
 
-			// set dst url
-			w.Header().Set("Location", dst_url)
-
-			// do w.WriteHeader() after set header
-			w.WriteHeader(http.StatusFound)
+	// get stream info.
+	addr, err := redis_client.Get(s.getUniqueKey()).Result()
+	if err == redis.Nil {
+		scenes.status = http.StatusNotFound
+	} else if err != nil {
+		scenes.status = http.StatusNotFound
+		panic(err)
+	} else {
+		daddr := fmt.Sprintf("%s:%d", s.localAddr, s.localPort)
+		if addr != daddr {
+			scenes.status = http.StatusFound
+			scenes.headers["Location"] = fmt.Sprintf("rtmp://%s/%s/%s/%s", addr, s.host, s.app, s.name)
 		}
 	}
 }

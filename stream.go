@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"sync"
 	"net/http"
+	"fmt"
 )
 
 var StreamMutex = &sync.Mutex{}
@@ -33,80 +34,10 @@ func NewStream(r *http.Request, f map[string][]string) *Stream {
 	return s
 }
 
-func AddStream(stream *Stream) {
-	defer StreamMutex.Unlock()
-	StreamMutex.Lock()
-	stream_list := stream.streams
-
-	apps := stream_list[stream.service]
-	if apps == nil {
-		apps = make(AppMapType)
-		stream_list[stream.service] = apps
-	}
-
-	streams := apps[stream.app]
-	if streams == nil {
-		streams = make(StreamMapType)
-		apps[stream.app] = streams
-	}
-
-	_, ok := streams[stream.name]
-	if !ok {
-		streams[stream.name] = stream
-	}
+func (s *Stream) getUniqueKey() string {
+	return fmt.Sprintf("%s:%s:%s", s.service, s.app, s.name)
 }
 
-func DelStream(stream *Stream) {
-	defer StreamMutex.Unlock()
-	StreamMutex.Lock()
-	stream_list := stream.streams
-
-	apps := stream_list[stream.service]
-	if apps == nil {
-		return
-	}
-
-	streams := apps[stream.app]
-	if streams == nil {
-		return
-	}
-
-	_, ok := streams[stream.name]
-	if !ok {
-		return
-	}
-
-	delete(streams, stream.name)
-	if len(streams) == 0 {
-		delete(apps, stream.app)
-		if len(apps) == 0 {
-			delete(stream_list, stream.service)
-		}
-	}
-}
-
-func GetStream(stream *Stream) *Stream {
-	defer StreamMutex.Unlock()
-	StreamMutex.Lock()
-	stream_list := stream.streams
-
-	apps := stream_list[stream.service]
-	if apps == nil {
-		return nil
-	}
-
-	streams := apps[stream.app]
-	if streams == nil {
-		return nil
-	}
-
-	s := streams[stream.name]
-	if s == nil {
-		return nil
-	}
-
-	// copy memory of s
-	cs := *s
-
-	return &cs
+func (s *Stream) getUniqueVal() string {
+	return fmt.Sprintf("%s:%d", s.localAddr, s.localPort)
 }
