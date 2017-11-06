@@ -1,27 +1,27 @@
-package main
+package scenes
 
 import (
 	"net/http"
 	"time"
 )
 
-type UpdatePublishScenes struct {
+type PublishScenes struct {
 	BaseScenes
 }
 
-func (scenes *UpdatePublishScenes) New(m *Manager) Scenes {
-	p := new(UpdatePublishScenes)
+func (scenes *PublishScenes) New(m *Manager) Scenes {
+	p := new(PublishScenes)
 	p.status = http.StatusOK
 	p.manager = m
 	p.headers = make(map[string]string)
 	return p
 }
 
-func (scenes *UpdatePublishScenes) Name() string {
-	return "UpdatePublishScenes"
+func (scenes *PublishScenes) Name() string {
+	return "PublishScenes"
 }
 
-func (scenes *UpdatePublishScenes) Run(s *Stream) {
+func (scenes *PublishScenes) Run(s *Stream) {
 	// TO DO
 	// defer distlock.Unlock()
 	// distlock.Lock()
@@ -30,13 +30,13 @@ func (scenes *UpdatePublishScenes) Run(s *Stream) {
 	redis_client := manager.redisClient
 	expire := time.Duration(manager.config.Expire) * time.Second
 
-	// keep stream alive.
-	set, err := redis_client.Expire(s.getUniqueKey(), expire).Result()
+	// check stream already exist or not?
+	set, err := redis_client.SetNX(s.getUniqueKey(), s.getUniqueVal(), expire).Result()
 	if err != nil {
 		// something error.
 		panic(err)
 	} else if !set {
-		// stream was expired.
+		// already exist.
 		scenes.status = http.StatusForbidden
 	} else {
 		// OK!

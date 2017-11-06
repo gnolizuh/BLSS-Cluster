@@ -34,9 +34,53 @@ func newRedis(config *Config) (*redis.Client, error) {
 	return client, nil
 }
 
+func action(c *cli.Context) error {
+	config := Config{}
+	config.Listen = c.String("listen")
+	config.Method = c.String("method")
+	config.Log = c.String("log")
+	config.RedisAddr = c.String("redis_addr")
+	config.Expire = c.Int64("expire")
+	config.Password = c.String("password")
+
+	if config.Log != "" {
+		f, err := os.OpenFile(config.Log, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		checkError(err)
+		defer f.Close()
+		log.SetOutput(f)
+	}
+
+	log.Printf("%d#0: %s/%s", os.Getpid(), myApp.Name, myApp.Version)
+
+	m := NewManager(&config)
+
+	if client, err := newRedis(&config); err != nil {
+		log.Printf("%d#0: redis(%s) connect failed, err: %s ", os.Getpid(), config.RedisAddr, err)
+		return nil
+	} else {
+		m.redisClient = client
+	}
+
+	s := &http.Server{
+		Addr:           config.Listen,
+		Handler:        m,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	log.Printf("%d#0: listening on: %s", os.Getpid(), s.Addr)
+	log.Printf("%d#0: method: %s", os.Getpid(), config.Method)
+	log.Printf("%d#0: redis addr: %s", os.Getpid(), config.RedisAddr)
+
+	log.Fatal(s.ListenAndServe())
+
+	return nil
+}
+
 func main()  {
 	myApp := cli.NewApp()
-	myApp.Name = "BLSS-cluster"
+	myApp.Name = "blss-clu"
 	myApp.Usage = "Make BLSS to be a dynamically expanding cluster"
 	myApp.Version = VERSION
 	myApp.Flags = []cli.Flag{
@@ -76,49 +120,6 @@ func main()  {
 			Usage: "redis password, default set to 123456",
 		},
 	}
-	myApp.Action = func(c *cli.Context) error {
-		config := Config{}
-		config.Listen = c.String("listen")
-		config.Method = c.String("method")
-		config.Log = c.String("log")
-		config.RedisAddr = c.String("redis_addr")
-		config.Expire = c.Int64("expire")
-		config.Password = c.String("password")
-
-		if config.Log != "" {
-			f, err := os.OpenFile(config.Log, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-			checkError(err)
-			defer f.Close()
-			log.SetOutput(f)
-		}
-
-		log.Printf("%d#0: %s/%s", os.Getpid(), myApp.Name, myApp.Version)
-
-		m := NewManager(&config)
-
-		if client, err := newRedis(&config); err != nil {
-			log.Printf("%d#0: redis(%s) connect failed, err: %s ", os.Getpid(), config.RedisAddr, err)
-			return nil
-		} else {
-			m.redisClient = client
-		}
-
-		s := &http.Server{
-			Addr:           config.Listen,
-			Handler:        m,
-			ReadTimeout:    10 * time.Second,
-			WriteTimeout:   10 * time.Second,
-			MaxHeaderBytes: 1 << 20,
-		}
-
-		log.Printf("%d#0: listening on: %s", os.Getpid(), s.Addr)
-		log.Printf("%d#0: method: %s", os.Getpid(), config.Method)
-		log.Printf("%d#0: redis addr: %s", os.Getpid(), config.RedisAddr)
-
-		log.Fatal(s.ListenAndServe())
-
-		return nil
-	}
-
+	myApp.Action = action
 	myApp.Run(os.Args)
 }

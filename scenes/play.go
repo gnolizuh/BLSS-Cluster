@@ -1,4 +1,4 @@
-package main
+package scenes
 
 import (
 	"net/http"
@@ -10,7 +10,7 @@ type PlayScenes struct {
 	BaseScenes
 }
 
-func (scenes *PlayScenes) New(m *Manager) Scenes {
+func (scenes *PlayScenes) NewPlayScenes(m *Manager) *BaseScenes {
 	p := new(PlayScenes)
 	p.status = http.StatusOK
 	p.manager = m

@@ -7,15 +7,17 @@ import (
 	"os"
 	"log"
 	"github.com/go-redis/redis"
+	"github.com/gnolizuh/blss-clu/scenes"
 )
 
 type MethodType func(*http.Request) map[string][]string
+type SceneType func() *BaseScene
 
 type Manager struct {
 	redisClient *redis.Client
 	config      *Config
 	methods      map[string]MethodType
-	scenes       map[string]Scenes
+	scenes       map[string]SceneType
 	streams      ServiceMapType
 	baseId       uint64
 }
@@ -50,7 +52,11 @@ func NewManager(config *Config) (*Manager) {
 		return kv
 	}
 
-	m.scenes = make(map[string]Scenes)
+	m.scenes = make(map[string]SceneType)
+	m.scenes["GET"] = func() *BaseScene {
+
+	}
+
 	m.scenes["publish"] = new(PublishScenes)
 	m.scenes["publish_done"] = new(PublishDoneScenes)
 	m.scenes["play"] = new(PlayScenes)
