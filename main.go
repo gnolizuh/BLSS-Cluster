@@ -22,7 +22,7 @@ func checkError(err error) {
 
 func newRedis(config *Config) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:     config.RedisAddr,
+		Addr:     config.Redis,
 		Password: config.Password,
 		DB:       0,
 	})
@@ -39,7 +39,7 @@ func action(c *cli.Context) error {
 	config.Listen = c.String("listen")
 	config.Method = c.String("method")
 	config.Log = c.String("log")
-	config.RedisAddr = c.String("redis_addr")
+	config.Redis = c.String("redis")
 	config.Expire = c.Int64("expire")
 	config.Password = c.String("password")
 
@@ -50,12 +50,12 @@ func action(c *cli.Context) error {
 		log.SetOutput(f)
 	}
 
-	log.Printf("%d#0: %s/%s", os.Getpid(), myApp.Name, myApp.Version)
+	log.Printf("%d#0: %s/%s", os.Getpid(), c.App.Name, c.App.Version)
 
 	m := NewManager(&config)
 
 	if client, err := newRedis(&config); err != nil {
-		log.Printf("%d#0: redis(%s) connect failed, err: %s ", os.Getpid(), config.RedisAddr, err)
+		log.Printf("%d#0: redis(%s) connect failed, err: %s ", os.Getpid(), config.Redis, err)
 		return nil
 	} else {
 		m.redisClient = client
@@ -71,7 +71,7 @@ func action(c *cli.Context) error {
 
 	log.Printf("%d#0: listening on: %s", os.Getpid(), s.Addr)
 	log.Printf("%d#0: method: %s", os.Getpid(), config.Method)
-	log.Printf("%d#0: redis addr: %s", os.Getpid(), config.RedisAddr)
+	log.Printf("%d#0: redis addr: %s", os.Getpid(), config.Redis)
 
 	log.Fatal(s.ListenAndServe())
 
@@ -85,12 +85,12 @@ func main()  {
 	myApp.Version = VERSION
 	myApp.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "listen,l",
+			Name:  "listen",
 			Value: ":19000",
 			Usage: "listen address",
 		},
 		cli.StringFlag{
-			Name:  "method,m",
+			Name:  "method",
 			Value: "POST",
 			Usage: "HTTP request method: GET/POST",
 		},
@@ -105,7 +105,7 @@ func main()  {
 			Usage: "specify a log level, default goes to info",
 		},
 		cli.StringFlag{
-			Name:  "redis_addr,r",
+			Name:  "redis",
 			Value: "localhost:6379",
 			Usage: "redis addr, default set to localhost:6379",
 		},

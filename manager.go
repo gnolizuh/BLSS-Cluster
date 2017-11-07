@@ -7,7 +7,6 @@ import (
 	"os"
 	"log"
 	"github.com/go-redis/redis"
-	"github.com/gnolizuh/blss-clu/scenes"
 )
 
 type MethodType func(*http.Request) map[string][]string
@@ -53,7 +52,7 @@ func NewManager(config *Config) (*Manager) {
 	}
 
 	m.scenes = make(map[string]SceneType)
-	m.scenes["GET"] = func() *BaseScene {
+	m.scenes["publish"] = func() *BaseScene {
 
 	}
 
